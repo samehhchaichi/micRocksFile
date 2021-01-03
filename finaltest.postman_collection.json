@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "e947234c-0235-4e2d-8c97-b0559231f3c6",
 		"name": "mockiung",
-		"description": "This is a simple API\n\nContact Support:\n Email: you@your-company.com",
+		"description": "version=1.0 - This is a PetStore API description",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
