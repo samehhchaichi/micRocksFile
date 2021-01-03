@@ -1,0 +1,141 @@
+{
+	"info": {
+		"_postman_id": "de74ad14-abe9-4172-81c2-692d1f1805b0",
+		"name": "testInventory",
+"description": "version=1.0 - This is a invenotory API description",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "searches inventory",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/inventory/:id",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"inventory",
+						":id"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "<integer>",
+							"type": "string",
+							"description": "(Required) dssds"
+						}
+					]
+				},
+				"description": "By passing in the appropriate options, you can search for\navailable inventory in the system\n"
+			},
+			"response": [
+				{
+					"name": "get product by id",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/inventory/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"inventory",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n \"id\": \"123\",\n \"name\": \"some text\",\n \"releaseDate\": \"2018-02-10T09:30Z\",\n \"manufacturer\": {\n  \"name\": \"some text\",\n  \"homePage\": \"\",\n  \"phone\": \"some text\"\n }\n}"
+				},
+				{
+					"name": "bad input parameter",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/inventory/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"inventory",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"status": "Bad Request",
+					"code": 400,
+					"_postman_previewlanguage": "text",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "text/plain"
+						}
+					],
+					"cookie": [],
+					"body": ""
+				},
+				{
+					"name": "searches inventory",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/inventory/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"inventory",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "456",
+									"type": "string",
+									"description": "(Required) dssds"
+								}
+							]
+						}
+					},
+					"_postman_previewlanguage": "json",
+					"header": null,
+					"cookie": [],
+					"body": " {\r\n  \"id\": \"456\",\r\n  \"name\": \"text of 456\",\r\n  \"releaseDate\": \"2018-02-10T09:30Z\",\r\n  \"manufacturer\": {\r\n   \"name\": \"some text\",\r\n   \"homePage\": \"\",\r\n   \"phone\": \"some text\"\r\n  }}"
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "/",
+			"type": "string"
+		}
+	]
+}
