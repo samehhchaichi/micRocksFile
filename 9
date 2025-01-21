@@ -1,0 +1,113 @@
+import java.io.*;
+import java.nio.file.*;
+import java.util.*;
+import java.util.stream.*;
+import org.yaml.snakeyaml.Yaml;
+
+public class StartServices {
+
+    public static void main(String[] args) throws IOException {
+        // Répertoire racine à analyser
+        String baseDir = "C:/chemin/vers/ton/projet"; // À modifier avec le chemin correct
+        List<Service> services = new ArrayList<>();
+
+        // Recherche récursive des projets Spring Boot
+        Files.walk(Paths.get(baseDir))
+             .filter(Files::isRegularFile)
+             .filter(path -> path.getFileName().toString().equals("pom.xml"))
+             .forEach(pomPath -> {
+                 try {
+                     String projectDir = pomPath.getParent().toString();
+                     Path configPath = Paths.get(projectDir, "config-local", "application-dev.yml");
+
+                     if (Files.exists(configPath)) {
+                         String artifactId = getArtifactId(pomPath);
+                         String port = getServerPort(configPath);
+
+                         if (artifactId != null && port != null) {
+                             services.add(new Service(artifactId, projectDir, port));
+                         }
+                     }
+                 } catch (Exception e) {
+                     System.err.println("Erreur lors du traitement du projet : " + pomPath);
+                     e.printStackTrace();
+                 }
+             });
+
+        // Affichage des services détectés
+        if (services.isEmpty()) {
+            System.out.println("❌ Aucun projet Spring Boot trouvé.");
+            return;
+        }
+
+        System.out.println("Projets détectés :");
+        for (int i = 0; i < services.size(); i++) {
+            System.out.printf("%d - %s (Port: %s)%n", i + 1, services.get(i).artifactId, services.get(i).port);
+        }
+
+        // Sélection des services à lancer
+        System.out.print("Entrez les numéros des applications à démarrer (ex: 1 3 5): ");
+        Scanner scanner = new Scanner(System.in);
+        String input = scanner.nextLine();
+        List<Integer> choices = Arrays.stream(input.split("\\s+"))
+                                      .map(Integer::parseInt)
+                                      .collect(Collectors.toList());
+
+        // Lancement des services sélectionnés
+        for (int choice : choices) {
+            if (choice >= 1 && choice <= services.size()) {
+                Service service = services.get(choice - 1);
+                System.out.printf("🚀 Lancement de %s sur le port %s...%n", service.artifactId, service.port);
+                startService(service);
+            } else {
+                System.out.println("Numéro invalide : " + choice);
+            }
+        }
+    }
+
+    private static String getArtifactId(Path pomPath) throws IOException {
+        // Récupérer l'artifactId dans le pom.xml
+        try (Stream<String> lines = Files.lines(pomPath)) {
+            return lines.filter(line -> line.trim().startsWith("<artifactId>"))
+                        .findFirst()
+                        .map(line -> line.replaceAll(".*<artifactId>(.*?)</artifactId>.*", "$1").trim())
+                        .orElse(null);
+        }
+    }
+
+    private static String getServerPort(Path configPath) throws IOException {
+        // Récupérer server.port dans application-dev.yml
+        Yaml yaml = new Yaml();
+        try (InputStream input = Files.newInputStream(configPath)) {
+            Map<String, Object> config = yaml.load(input);
+            if (config.containsKey("server.port")) {
+                return config.get("server.port").toString();
+            }
+        }
+        return null;
+    }
+
+    private static void startService(Service service) {
+        try {
+            ProcessBuilder pb = new ProcessBuilder("mvn", "spring-boot:run", "-Dspring-boot.run.arguments=--server.port=" + service.port);
+            pb.directory(new File(service.projectDir));
+            pb.inheritIO();
+            pb.start();
+        } catch (IOException e) {
+            System.err.println("Erreur lors du lancement de " + service.artifactId);
+            e.printStackTrace();
+        }
+    }
+
+    static class Service {
+        String artifactId;
+        String projectDir;
+        String port;
+
+        Service(String artifactId, String projectDir, String port) {
+            this.artifactId = artifactId;
+            this.projectDir = projectDir;
+            this.port = port;
+        }
+    }
+}
