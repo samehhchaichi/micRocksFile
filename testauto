@@ -1,0 +1,71 @@
+@echo off
+setlocal enabledelayedexpansion
+
+:: 🔹 Définition du dossier racine (à adapter selon ton projet)
+set "BASE_DIR=C:\chemin\vers\ton\projet"
+
+:: 🔹 Détection automatique des applications Spring Boot basées sur config-local/application-dev.yml
+set "index=0"
+for /d %%D in ("%BASE_DIR%\*") do (
+    if exist "%%D\config\environnements\application-dev.yml" (
+        set /a index+=1
+        set "appPath!index!=%%D"
+
+        :: 🔸 Récupérer le port depuis application-dev.yml
+        set "port=NON-TROUVÉ"
+        for /f "tokens=2 delims=:" %%P in ('findstr "server.port" "%%D\config\environnements\application-dev.yml" 2^>nul') do (
+            set "port=%%P"
+            set "port=!port: =!"  :: Supprimer les espaces
+        )
+        set "appPort!index!=%port%"
+
+        :: 🔸 Récupérer le bon artifactId depuis pom.xml
+        set "artifactId=NON-TROUVÉ"
+        for /f "tokens=2 delims=<>" %%A in ('findstr "<artifactId>" "%%D\pom.xml" 2^>nul') do (
+            if "!artifactId!"=="NON-TROUVÉ" set "artifactId=%%A"
+        )
+        set "appName!index!=%artifactId%"
+
+        echo !index! - %artifactId% (Port: %port%)
+    )
+)
+
+if %index%==0 (
+    echo ❌ Aucun projet Spring Boot détecté dans %BASE_DIR%.
+    pause
+    exit /b
+)
+
+:: 🔹 Demander quelles applications démarrer
+set /p "choices=Entrez les numéros des applications à démarrer (ex: 1 3 5): "
+
+:: 🔹 Lancer les applications sélectionnées après un git pull
+for %%i in (%choices%) do (
+    if defined appPath%%i (
+        set "appPath=!appPath%%i!"
+        set "appPort=!appPort%%i!"
+        set "appName=!appName%%i!"
+
+        echo ================================
+        echo 🚀 Lancement de !appName! sur le port !appPort!...
+        echo ================================
+
+        :: 🔹 Vérifier si c'est un repo Git
+        if exist "!appPath!\.git" (
+            echo 🔄 Mise à jour de !appName! avec git pull...
+            cd /d "!appPath!"
+            git pull
+            cd /d "%BASE_DIR%"
+        ) else (
+            echo ⚠️  Pas de dépôt Git trouvé pour !appName!, démarrage sans mise à jour.
+        )
+
+        :: 🔹 Lancer l'application après le git pull
+        start "!appName!" cmd /k "cd /d !appPath! && mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=!appPort!"
+    ) else (
+        echo ❌ Numéro %%i non valide, application ignorée.
+    )
+)
+
+echo ✅ Toutes les applications demandées sont en cours d'exécution.
+pause
